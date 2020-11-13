@@ -108,23 +108,36 @@ class Trainer(nn.Module):
 
         with torch.no_grad():
             for batch in tqdm(self.valloader):
-                loss, accuracy, metrics = self.model.evaluate_step(batch)
-                epoch_loss += loss.item()
+                (loss, loss_dict), accuracy, metrics = self.model.evaluate_step(batch)
+                for key, value in loss_dict.items():
+                    if key in epoch_loss.keys():
+                        epoch_loss[key] += value
+                    else:
+                        epoch_loss[key] = value
+
                 epoch_acc += accuracy.item()
                 metric_dict.update(metrics)
-        self.model.reset_metrics()
+
         end_time = time.time()
         running_time = end_time - start_time
+        self.model.reset_metrics()
+
+        for key in epoch_loss.keys():
+            epoch_loss[key] /= len(self.val_loader)
+
+        loss_string = '{}'.format(epoch_loss)[
+            1:-1].replace("'", '').replace(",", ' ||')
 
         print()
-        print("[{}|{}] || Time {:10.5f} || Validation results || Val Loss: {:10.5f} || Val Accuracy: {:10.5f} |".format(
-            self.epoch, self.num_epochs, running_time, epoch_loss / len(self.valloader), epoch_acc / len(self.valloader)), end=' ')
+        print("[{}|{}] || {} || Acc: {:10.4f} || Time: {:10.4f} s".format(
+            self.epoch, self.num_epochs, loss_string, epoch_acc, running_time))
+
         for metric, score in metric_dict.items():
             print(metric + ': ' + str(score), end=' | ')
         print('==')
         print('==========================================================================')
 
-        log_dict = {"Validation Loss/Epoch": epoch_loss /
+        log_dict = {"Validation Loss/Epoch": epoch_loss['T'] /
                     len(self.valloader),
                     "Validation Accuracy/Epoch": epoch_acc /
                     len(self.valloader), }
