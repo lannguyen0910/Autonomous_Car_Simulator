@@ -1,6 +1,7 @@
 from utils.techniques.gradient_clipping import clip_gradient
 import torch
 import torch.nn as nn
+import time
 from tqdm import tqdm
 from .checkpoint import CheckPoint, load
 from logger import Logger
@@ -35,24 +36,27 @@ class Trainer(nn.Module):
         else:
             self.print_per_iter = int(len(self.train_loader) / 10)
 
-        print(f'Training for {num_epochs} epochs ...')
+        print('===========================START TRAINING=================================')
         for epoch in range(num_epochs):
-            self.epoch = epoch + 1
+            try:
+                self.epoch = epoch + 1
 
-            self.train_per_epoch()
+                self.train_per_epoch()
 
-            if epoch % self.evaluate_epoch == 0 and epoch + 1 >= self.evaluate_epoch:
-                val_loss, val_acc, val_metrics = self.evaluate_per_epoch()
-                val_dict = {'Validation Loss per Epoch': val_loss,
-                            'Validation Accuracy per Epoch': val_acc}
-                val_dict.update(val_metrics)
-                self.logged(val_dict)
+                if epoch % self.evaluate_epoch == 0 and epoch + 1 >= self.evaluate_epoch:
+                    self.evaluate_epoch()
 
-            if self.scheduler is not None:
-                self.scheduler.step()
+                if self.scheduler is not None:
+                    self.scheduler.step()
 
-            if epoch % self.checkpoint.save_per_epoch == 0 and epoch + 1 == num_epochs:
-                self.checkpoint.save(self.model, epoch=epoch)
+                if epoch % self.checkpoint.save_per_epoch == 0 and epoch + 1 == num_epochs:
+                    self.checkpoint.save(self.model, epoch=epoch)
+            except KeyboardInterrupt:
+                self.checkpoint.save(self.model, epoch=epoch, interrupted=True)
+                print('Stop training. Saved checkpoint!')
+                break
+
+            print('Train Completed')
 
     def train_per_epoch(self):
         self.model.train()
@@ -84,35 +88,48 @@ class Trainer(nn.Module):
         with torch.no_grad():
             for batch in test_loader:
                 outputs = self.model.inference_step(batch)
-                for i in outputs:
-                    results.append(i)
+                if isinstance(outputs, (list, tuple)):
+                    for i in outputs:
+                        results.append(i)
+                else:
+                    results = outputs
+                break
 
         return results
 
     def evaluate_per_epoch(self):
         self.model.eval()
-        epoch_loss = 0.0
-        epoch_acc = 0.0
+        epoch_loss = {}
+        epoch_acc = 0
         metric_dict = {}
 
+        print('===========================EVALUATION=================================')
+        start_time = time.time()
+
         with torch.no_grad():
-            for batch in tqdm(self.val_loader):
+            for batch in tqdm(self.valloader):
                 loss, accuracy, metrics = self.model.evaluate_step(batch)
-                epoch_loss += loss
-                epoch_acc += accuracy
+                epoch_loss += loss.item()
+                epoch_acc += accuracy.item()
                 metric_dict.update(metrics)
-
         self.model.reset_metrics()
+        end_time = time.time()
+        running_time = end_time - start_time
 
-        val_loss = epoch_loss / len(self.val_loader)
-        val_acc = epoch_acc / len(self.val_loader)
-        print(
-            f'Epoch: [{self.epoch}/{self.num_epochs}] | Eval: Val Loss: {val_loss: 10.5f} | Val Acc: {val_acc: 10.5f} |', end=' ')
+        print()
+        print("[{}|{}] || Time {:10.5f} || Validation results || Val Loss: {:10.5f} || Val Accuracy: {:10.5f} |".format(
+            self.epoch, self.num_epochs, running_time, epoch_loss / len(self.valloader), epoch_acc / len(self.valloader)), end=' ')
         for metric, score in metric_dict.items():
-            print(f'{metric}: {score}', end='|')
-        print('\n')
+            print(metric + ': ' + str(score), end=' | ')
+        print('==')
+        print('==========================================================================')
 
-        return val_loss, val_acc, metric_dict
+        log_dict = {"Validation Loss/Epoch": epoch_loss /
+                    len(self.valloader),
+                    "Validation Accuracy/Epoch": epoch_acc /
+                    len(self.valloader), }
+        log_dict.update(metric_dict)
+        self.logging(log_dict)
 
     def __str__(self) -> str:
         title = '------------- Model Summary ---------------\n'
