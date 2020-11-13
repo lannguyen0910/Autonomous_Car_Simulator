@@ -1,4 +1,5 @@
 from models.classifier import Classifier
+from models.regressor import Regressor
 from random import shuffle
 from numpy.lib.npyio import save
 from torchvision.models.resnet import ResNet,  resnet34, resnet50
