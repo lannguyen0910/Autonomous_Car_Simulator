@@ -9,7 +9,7 @@ from logger import Logger
 
 class Trainer(nn.Module):
     def __init__(self, model, train_loader, val_loader, **kwargs):
-        super().__init__()
+        super(Trainer, self).__init__()
         self.model = model
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -164,6 +164,9 @@ class Trainer(nn.Module):
         self.evaluate_epoch = 1
         self.scheduler = None
         self.gradient_clip = None
-        self.logger = Logger()
+        self.logger = None
         for i, j in kwargs.items():
             setattr(self, i, j)
+
+        if self.logger is None:
+            self.logger = Logger()

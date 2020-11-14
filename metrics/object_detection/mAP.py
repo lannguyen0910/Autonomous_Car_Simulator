@@ -1,4 +1,4 @@
-from ssd.utils import *
+from metrics.object_detection.utils import *
 
 
 class mean_average_precision():
