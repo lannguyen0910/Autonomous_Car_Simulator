@@ -161,7 +161,7 @@ class Trainer(nn.Module):
                     "Validation Accuracy/Epoch": epoch_acc /
                     len(self.val_loader), }
         log_dict.update(metric_dict)
-        self.logging(log_dict)
+        self.logged(log_dict)
 
     def __str__(self) -> str:
         title = '------------- Model Summary ---------------\n'
