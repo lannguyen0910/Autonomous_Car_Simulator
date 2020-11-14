@@ -60,27 +60,46 @@ class Trainer(nn.Module):
 
     def train_per_epoch(self):
         self.model.train()
-        epoch_loss = 0.0
-        running_loss = 0.0
+        running_time = 0
+        running_loss = {}
 
         for i, batch in tqdm(enumerate(self.train_loader)):
             self.optimizer.zero_grad()
-            loss = self.model.training_step(batch)
+            start_time = time.time()
+            loss, loss_dict = self.model.training_step(batch)
+
+            if loss == 0 or not torch.isfinite(loss):
+                continue
+
             loss.backward()
 
             if self.gradient_clip is not None:
                 clip_gradient(self.optimizer, self.gradient_clip)
 
             self.optimizer.step()
-            epoch_loss += loss.item()
-            running_loss += loss.item()
+            end_time = time.time()
 
-            iters = len(self.train_loader)*self.epoch + i + 1
+            for (key, value) in loss_dict.items():
+                if key in running_loss.keys():
+                    running_loss[key] += value
+                else:
+                    running_loss[key] = value
+
+            running_time += end_time - start_time
+            iters = len(self.train_loader)*self.epoch+i+1
             if iters % self.print_per_iter == 0:
-                print(f'\tEpoch: [{self.epoch }/{self.num_epochs}] | Iter: [{iters}/{self.num_iters}] \
-                    | Traning Loss: {running_loss/self.print_per_iter:10.5f}')
-                self.logged({'Train Loss per Batch': running_loss, })
-                running_loss = 0
+
+                for key in running_loss.keys():
+                    running_loss[key] /= self.print_per_iter
+
+                loss_string = '{}'.format(running_loss)[
+                    1:-1].replace("'", '').replace(",", ' ||')
+                print("[{}|{}] [{}|{}] || {} || Time: {:10.4f} s".format(
+                    self.epoch, self.num_epochs, iters, self.num_iters, loss_string, running_time))
+                self.logged(
+                    {"Training Loss/Batch": running_loss['T'] / self.print_per_iter, })
+                running_loss = {}
+                running_time = 0
 
     def inference_per_batch(self, test_loader):
         self.model.eval()
@@ -159,7 +178,7 @@ class Trainer(nn.Module):
         outputs = self.model.forward_step()
         print('Feedforward: output_shape: ', outputs.shape)
 
-    def set_attribute(self, **kwargs):
+    def set_attribute(self, kwargs):
         self.checkpoint = None
         self.evaluate_epoch = 1
         self.scheduler = None

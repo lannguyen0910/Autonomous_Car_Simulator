@@ -53,7 +53,7 @@ class UdacityDataset(data.Dataset):
         labels = torch.stack([i[1] for i in batch])
         return {
             'imgs': imgs,
-            'labels': labels
+            'categories': labels
         }
 
     def __str__(self):

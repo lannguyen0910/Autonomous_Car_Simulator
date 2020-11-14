@@ -18,7 +18,7 @@ import torchvision.transforms as tf
 train_transforms = tf.Compose([
     tf.RandomAffine(0, translate=(0, 0.2)),
     tf.ColorJitter(brightness=0.5, contrast=0.5),
-    tf.ToTensor,
+    tf.ToTensor(),
     tf.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
@@ -52,11 +52,11 @@ if __name__ == '__main__':
     criterion = MSELoss()
     optimizer = torch.optim.Adam
     model = Regressor(n_classes=NUM_CLASSES,
-                      optim_params={'lr': 1e-3},
                       criterion=criterion,
                       optimizer=optimizer,
                       freeze=True,
-                      device=device)
+                      device=device,
+                      optim_params={'lr': 1e-3})
 
     trainer = Trainer(model,
                       trainloader,
