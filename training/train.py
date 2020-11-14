@@ -44,7 +44,7 @@ class Trainer(nn.Module):
                 self.train_per_epoch()
 
                 if epoch % self.evaluate_epoch == 0 and epoch + 1 >= self.evaluate_epoch:
-                    self.evaluate_epoch()
+                    self.evaluate_per_epoch()
 
                 if self.scheduler is not None:
                     self.scheduler.step()
