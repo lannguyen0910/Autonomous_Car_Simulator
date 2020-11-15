@@ -54,7 +54,6 @@ class Regressor(BaselineModel):
     def evaluate_step(self, batch):
         inputs = batch["imgs"]
         targets = batch["categories"]
-        accuracy = 0
 
         if self.device:
             inputs = inputs.to(self.device)
@@ -63,10 +62,9 @@ class Regressor(BaselineModel):
         outputs = self(inputs)  # batch_size, category_dim
         loss = self.criterion(outputs, targets)
 
-        accuracy += (outputs == targets).float().sum()
         metric_dict = self.update_metrics(outputs, targets)
 
-        return loss, accuracy, metric_dict
+        return loss, metric_dict
 
     def inference_img(self, img):
         self.model.eval()

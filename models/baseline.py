@@ -35,8 +35,7 @@ class BaselineModel(nn.Module):
         metric_dict = {}
         for metric in self.metrics:
             metric.update(outputs, targets)
-            items = {metric: metric.value()}
-            metric_dict.update(items)
+            metric_dict.update(metric.value())
 
         return metric_dict
 

@@ -16,14 +16,17 @@ class CheckPoint:
 
         if self.path is None:
             self.path = os.path.join(
-                'weights', datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+                'weights/udacity', datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+        else:
+            self.path = os.path.join(
+                self.path, datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
 
     def save(self, model, **kwargs):
         if not os.path.exists(self.path):
             os.mkdir(self.path)
 
         epoch = kwargs['epoch'] if 'epoch' in kwargs else '0'
-        model_path = "_".join([model.model_name, str(epoch)])
+        model_path = "_".join([model.name, str(epoch)])
 
         if 'interrupted' in kwargs:
             model_path += '_interrupted'

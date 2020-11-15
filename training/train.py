@@ -43,13 +43,13 @@ class Trainer(nn.Module):
 
                 self.train_per_epoch()
 
-                if epoch % self.evaluate_epoch == 0 and epoch + 1 >= self.evaluate_epoch:
+                if self.epoch % self.evaluate_epoch == 0 and self.epoch + 1 >= self.evaluate_epoch:
                     self.evaluate_per_epoch()
 
                 if self.scheduler is not None:
                     self.scheduler.step()
 
-                if epoch % self.checkpoint.save_per_epoch == 0 and epoch + 1 == num_epochs:
+                if self.epoch % self.checkpoint.save_per_epoch == 0 and self.epoch == num_epochs:
                     self.checkpoint.save(self.model, epoch=epoch)
             except KeyboardInterrupt:
                 self.checkpoint.save(self.model, epoch=epoch, interrupted=True)
@@ -119,7 +119,6 @@ class Trainer(nn.Module):
     def evaluate_per_epoch(self):
         self.model.eval()
         epoch_loss = {}
-        epoch_acc = 0
         metric_dict = {}
 
         print('===========================EVALUATION=================================')
@@ -127,14 +126,13 @@ class Trainer(nn.Module):
 
         with torch.no_grad():
             for batch in tqdm(self.val_loader):
-                (loss, loss_dict), accuracy, metrics = self.model.evaluate_step(batch)
+                (loss, loss_dict), metrics = self.model.evaluate_step(batch)
                 for key, value in loss_dict.items():
                     if key in epoch_loss.keys():
                         epoch_loss[key] += value
                     else:
                         epoch_loss[key] = value
 
-                epoch_acc += accuracy.item()
                 metric_dict.update(metrics)
 
         end_time = time.time()
@@ -149,17 +147,15 @@ class Trainer(nn.Module):
 
         print()
         print("[{}|{}] || {} || Acc: {:10.4f} || Time: {:10.4f} s".format(
-            self.epoch, self.num_epochs, loss_string, epoch_acc, running_time))
+            self.epoch, self.num_epochs, loss_string, running_time))
 
         for metric, score in metric_dict.items():
-            print(metric + ': ' + str(score), end=' | ')
+            print(f'{metric}:  + {score}', end=' | ')
         print('==')
         print('==========================================================================')
 
         log_dict = {"Validation Loss/Epoch": epoch_loss['T'] /
-                    len(self.val_loader),
-                    "Validation Accuracy/Epoch": epoch_acc /
-                    len(self.val_loader), }
+                    len(self.val_loader)}
         log_dict.update(metric_dict)
         self.logged(log_dict)
 
