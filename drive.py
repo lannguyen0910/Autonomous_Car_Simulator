@@ -9,9 +9,11 @@ from PIL import Image
 from flask import Flask
 from io import BytesIO
 
+import shutil
 import torch
 import torchvision.transforms as tf
 from utils.getter import *
+from training.checkpoint import load
 
 val_transforms = tf.Compose([
     tf.ToTensor(),
@@ -105,6 +107,7 @@ if __name__ == '__main__':
         default='',
         help='Path to image folder. This is where the images from the run will be saved.'
     )
+
     args = parser.parse_args()
     device = torch.device('cuda')
     criterion = MSELoss()
@@ -116,3 +119,22 @@ if __name__ == '__main__':
         optimizer=optimizer,
         device=device
     )
+
+    load(model, 'weights/udacity/ResNet34_30.pth')
+
+    if args.image_folder != '':
+        print("Creating image folder at {}".format(args.image_folder))
+        if not os.path.exists(args.image_folder):
+            os.makedirs(args.image_folder)
+        else:
+            shutil.rmtree(args.image_folder)
+            os.makedirs(args.image_folder)
+        print("RECORDING THIS RUN ...")
+    else:
+        print("NOT RECORDING THIS RUN ...")
+
+    # wrap Flask application with engineio's middleware
+    app = socketio.Middleware(sio, app)
+
+    # deploy as an eventlet WSGI server
+    eventlet.wsgi.server(eventlet.listen(('', 4567)), app)
