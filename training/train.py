@@ -49,10 +49,10 @@ class Trainer(nn.Module):
                 if self.scheduler is not None:
                     self.scheduler.step()
 
-                if self.epoch % self.checkpoint.save_per_epoch == 0 and self.epoch == num_epochs:
-                    self.checkpoint.save(self.model, epoch=epoch)
+                if self.epoch % self.checkpoint.save_per_epoch == 0 or self.epoch == num_epochs:
+                    self.checkpoint.save(self.model, epoch=self.epoch)
             except KeyboardInterrupt:
-                self.checkpoint.save(self.model, epoch=epoch, interrupted=True)
+                self.checkpoint.save(self.model, epoch=self.epoch, interrupted=True)
                 print('Stop training. Saved checkpoint!')
                 break
 
