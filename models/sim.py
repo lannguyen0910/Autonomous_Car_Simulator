@@ -47,7 +47,7 @@ class NetworkLight(nn.Module):
             nn.Dropout(p=0.25)
         )
         self.linear_layers = nn.Sequential(
-            nn.Linear(in_features=48*4*19, out_features=50),
+            nn.Linear(in_features=48*9*19, out_features=50),
             nn.ELU(),
             nn.Linear(in_features=50, out_features=10),
             nn.Linear(in_features=10, out_features=1)
@@ -55,7 +55,7 @@ class NetworkLight(nn.Module):
 
     def forward(self, input):
         print('Shape: ', input.shape)
-        input = input.view(input.size(0), 3, 70, 320)
+        input = input.view(input.size(0), 3, 160, 320)
         output = self.conv_layers(input)
         print(output.shape)
         output = output.view(output.size(0), -1)

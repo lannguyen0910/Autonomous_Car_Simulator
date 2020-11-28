@@ -121,7 +121,7 @@ if __name__ == '__main__':
         device=device
     )
 
-    load(model, 'weights/udacity/ResNet34_30_old.pt')
+    load(model, 'weights/udacity/NetworkLight_30.pt')
 
     if args.image_folder != '':
         print("Creating image folder at {}".format(args.image_folder))
