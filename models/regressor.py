@@ -1,3 +1,4 @@
+from models.sim import NetworkLight
 import torch
 import torch.nn as nn
 from .baseline import BaselineModel
@@ -7,19 +8,11 @@ import torchvision.models as models
 class Regressor(BaselineModel):
     def __init__(self, n_classes, **kwargs):
         super(Regressor, self).__init__(**kwargs)
-        self.model = models.resnet34(pretrained=True)
-        self.name = 'ResNet34'
+        self.model = NetworkLight()
+        self.name = 'NetworkLight'
         self.optimizer = self.optimizer(self.parameters(), lr=self.lr)
         self.set_optimizer_params()
         self.n_classes = n_classes
-
-        if self.freeze:
-            for params in self.model.parameters():
-                params.requires_grad = False
-
-        in_features = self.model.fc.in_features
-        self.model.fc = nn.Linear(in_features=in_features,
-                                  out_features=self.n_classes)
 
         if self.device is not None:
             self.model.to(self.device)
