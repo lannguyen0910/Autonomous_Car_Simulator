@@ -10,16 +10,18 @@
 - logger/runs/udacity contains events for tensorboard.
 - weights/udacity contains weights of model.
 - config hyperparameters in run.py
-...
+
+```
 python run.py
-...
+```
 
 ## Inference:
 - Start autonomous mode.
 - Run command and see the self_driving_car:
-...
+
+```
 python drive.py
-...
+```
 
 ## Result:
 ![Alt Text](result/sim_car.gif)
