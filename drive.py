@@ -60,8 +60,10 @@ def telemetry(sid, data):
             else:
                 speed_limit = MAX_SPEED
 
-            throttle = 1.0  # - steering_angle**2 - (speed/speed_limit)**2
-            print('{} {} {}'.format(steering_angle, throttle, speed))
+            throttle = 1.0 - steering_angle**2 - (speed/speed_limit)**2
+            print('{:10.4f} {:10.4f} {:10.4f}'.format(
+                steering_angle, throttle, speed))
+            # send to software to autonomously driving
             send_control(steering_angle, throttle)
 
         except Exception as e:
@@ -109,18 +111,17 @@ if __name__ == '__main__':
     )
 
     args = parser.parse_args()
-    device = torch.device('cuda')
-    criterion = MSELoss()
-    optimizer = torch.optim.Adam
+    device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
+
     model = Regressor(
         n_classes=1,
         optim_params={'lr': 1e-3},
-        criterion=criterion,
-        optimizer=optimizer,
+        criterion=MSELoss(),
+        optimizer=torch.optim.Adam,
         device=device
     )
 
-    load(model, 'weights/udacity/ResNet34_30.pth')
+    load(model, 'weights/udacity/ResNet34_30_old.pt')
 
     if args.image_folder != '':
         print("Creating image folder at {}".format(args.image_folder))

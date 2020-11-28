@@ -45,7 +45,7 @@ def load(model, path):
         model (.pt): model weights
         path (str): checkpoint path
     """
-    state = torch.load(path)
+    state = torch.load(path, map_location=torch.device('cpu'))
     model.model.load_state_dict(state['model'])
     model.optimizer.load_state_dict(state['optimizer'])
     print('Loaded!')

@@ -54,7 +54,6 @@ if __name__ == '__main__':
     model = Regressor(n_classes=NUM_CLASSES,
                       criterion=criterion,
                       optimizer=optimizer,
-                      freeze=True,
                       device=device,
                       optim_params={'lr': 1e-3})
 
