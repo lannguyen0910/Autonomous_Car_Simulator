@@ -24,5 +24,5 @@ python drive.py
 ```
 
 ## Result:
-![Alt Text](result/sim_car.gif)
+![Alt Text](result/sim.gif)
 
