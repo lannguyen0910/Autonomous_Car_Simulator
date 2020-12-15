@@ -42,9 +42,9 @@ if __name__ == '__main__':
                               transforms=train_transforms)
     valset = UdacityDataset(img_folder, valdata, transforms=val_transforms)
     trainloader = data.DataLoader(
-        trainset, batch_size=16, collate_fn=trainset.collate_fn)
+        trainset, batch_size=16, collate_fn=trainset.collate_fn, num_workers= 4, pin_memory=True)
     valloader = data.DataLoader(
-        valset, batch_size=16, collate_fn=valset.collate_fn)
+        valset, batch_size=16, collate_fn=valset.collate_fn, num_workers=4, pin_memory=True)
     print(trainset)
     print(valset)
 
